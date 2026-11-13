@@ -107,7 +107,7 @@ jobs:
       run: |
         $boost_ver = "1.83.0"
         $boost_dir = "boost_$($boost_ver -replace '\.','_')"
-        $url = "https://archives.boost.io/release/$boost_ver/source/${boost_dir}.zip"
+        $url = "https://boost.io{boost_dir}.zip"
         Invoke-WebRequest -Uri $url -OutFile boost.zip
         New-Item -ItemType Directory -Force -Path C:\local
         Expand-Archive -Path boost.zip -DestinationPath C:\local
@@ -152,13 +152,19 @@ jobs:
     - name: Run tests
       run: ctest --test-dir build --output-on-failure
 
-    # --- ИСПРАВЛЕННЫЙ БЛОК СКАЧИВАНИЯ ---
+    # --- СОБИРАЕМ ВСЕ EXE И DLL В ОТДЕЛЬНУЮ ПАПКУ ---
+    - name: Prepare Release Folder (Windows Only)
+      if: runner.os == 'Windows'
+      shell: pwsh
+      run: |
+        New-Item -ItemType Directory -Force -Path release_files
+        Get-ChildItem -Path build -Recurse -Include *.exe, *.dll | Copy-Item -Destination release_files -Force
+        Get-ChildItem -Path release_files
+
     - name: Upload Artifact (Windows Only)
       if: runner.os == 'Windows'
       uses: actions/upload-artifact@v4
       with:
         name: Element-Windows-Build
-        # Ищем exe и dll на любой глубине внутри папки build
-        path: |
-          build/**/*.exe
-          build/**/*.dll
+        path: release_files/
+        if-no-files-found: error
