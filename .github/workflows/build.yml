@@ -151,3 +151,14 @@ jobs:
     
     - name: Run tests
       run: ctest --test-dir build --output-on-failure
+
+    # --- ДОБАВЛЕННЫЙ БЛОК ДЛЯ СКАЧИВАНИЯ EXE ---
+    - name: Upload Artifact (Windows Only)
+      if: runner.os == 'Windows'
+      uses: actions/upload-artifact@v4
+      with:
+        name: Element-Windows-Build
+        # Забираем exe и все dll из папки сборки
+        path: |
+          build/element.exe
+          build/*.dll
